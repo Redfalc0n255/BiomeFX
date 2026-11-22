@@ -20,7 +20,7 @@ An indoor mini greenhouse for small herbs (basil, rosemary and similar) kept ali
 
 ## Control
 
-From the laptop over **Bluetooth Low Energy**. No Wi-Fi or home server.
+From the laptop over **Bluetooth Low Energy**. Wi-Fi is used only to get the time (see Timekeeping). There's no home server.
 
 Plan: the ESP32 runs the greenhouse on its own and exposes BLE characteristics (readings, relay states, setpoints, light schedule). A single web page uses Web Bluetooth (Chrome or Edge) to connect, show readings and change settings. No app to install, and it can be hosted free on GitHub Pages.
 
@@ -39,7 +39,14 @@ Plan: the ESP32 runs the greenhouse on its own and exposes BLE characteristics (
 | Over-temp cutoff | 30 °C (86 °F) | Mat forced off whatever else is happening. |
 | Lights | 14 h on (06:00–20:00) | Typical for basil and herbs indoors in winter. |
 
+## Timekeeping
+
+The ESP32 joins home Wi-Fi only to get the time from an internet time server (NTP, `pool.ntp.org`), using the `America/New_York` timezone so daylight saving is handled automatically. It re-syncs every few hours. Wi-Fi and Bluetooth run together on the ESP32's shared radio; the NimBLE Bluetooth library keeps memory use down.
+
+- Wi-Fi name and password go in `secrets.h`, which is in `.gitignore` and never committed.
+- If Wi-Fi is down at boot, the ESP32 keeps retrying in the background. Until it has the time, the lights follow a fallback (on for 14 h from power-up) and the heat mat thermostat works normally, since it doesn't need the clock.
+- The laptop page can also set the time over Bluetooth as a backup.
+
 ## Open questions
 
 - Which Waveshare e-ink model (size and version)?
-- **Keeping time:** with no Wi-Fi, the ESP32 only knows the time if the laptop sets it over Bluetooth. After a power cut the light schedule would be wrong until you reconnect. A DS3231 real-time clock module (about $5, same I2C bus) would fix that.
